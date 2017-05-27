@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html lang="en">
+<head>
+  <title>ControlSMB</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=0.5">
+  <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" >
+  <link rel="stylesheet" href="{% static 'css/syntax.css' %}" >  
+  <link rel="stylesheet" href="{% static 'css/epoch.css' %}"  >  
+  <link rel="stylesheet" href="{% static 'css/site.css' %}"   >   
+  <script src="{% static 'js/d3.js' %}">              </script>     
+  <script src="{% static 'js/epoch.js' %}">           </script>     
+  <script src="{% static 'js/data.js' %}">            </script>     
+  <script src="{% static 'js/ZeroClipboard.min.js' %}"></script>     
+  <script src="{% static 'js/moment.js' %}">          </script>     
+  <script src="{% static 'js/jquery.min.js' %}">      </script>  
+  <script src="{% static 'js/bootstrap.min.js' %}">   </script>  
+  <script src="{% static 'js/raphael-min.js' %}">     </script>  
+  <script src="{% static 'js/jquery-1.8.2.min.js' %}"></script>    
+  <script src="{% static 'js/socket.io-1.2.0.js' %}"> </script>    
+</head>
+
+<style>
+.switch 
+{
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.switch input {display:none;}
+
+.slider 
+{
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before 
+{
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider 
+{
+  background-color: #3399ff;
+
+}
+
+input:focus + .slider 
+{
+  box-shadow: 0 0 1px #3399ff;
+
+}
+
+input:checked + .slider:before 
+{
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+  
+}
+
+/* Rounded sliders */
+.slider.round 
+{
+  border-radius: 34px;
+}
+
+.slider.round:before 
+{
+  border-radius: 50%;
+}
+
+</style>
+<body>
+
+<div class="jumbotron text-center">
+  <h1>ControlSMB</h1>
+  <h2> Mode </h2>
+  <h4>Auto
+    <label class="switch">
+          <input type="checkbox"  id="M" value="OFF" style="color:blue" onclick="toggle(this);">
+           <div class="slider round" ></div>
+    
+</div>
+  
+<div class="container">
+  <div class="row">
+
+    <div  id="Temp" class="col-sm-6">
+      <h1 style="text-align:center;"> SET Temperature&Humidity  </h1>
+      <p><font color="red"> SET Temperature:  </font>
+      <input type="range" min="0.00" max="100.00" value="0"  oninput="showValueT(this.value)" />
+        <span id="range">0</span>
+      <p><font color="blue">Humidity: </font>
+      <input type="range" min="0.00" max="100.00" value="0"  oninput="showValueH(this.value)" />
+        <span id="range2">0</span>
+    </div>
+
+    <div id="Humi" class="col-sm-6">
+    <h1 style="text-align:center;"><font color="black"> SET LightLED </font> </h1>
+      <p><font color="Red"> Red </font>
+      <input type="range" min="0.00" max="999.00" value="0"  oninput="Red(this.value)"   />
+        <span id="Red">0</span>
+      <p><font color="Green"> Green </font>
+      <input type="range" min="0.00" max="999.00" value="0"  oninput="Green(this.value)" />
+        <span id="Green">0</span>
+      <p><font color="Blue"> Blue </font>
+      <input type="range" min="0.00" max="999.00" value="0"  oninput="Blue(this.value)" />
+        <span id="Blue">0</span>
+    </div>
+
+    <div id="Light" class="col-sm-6">
+      <h1 style="text-align:center;"> Status </h1>
+    <h3 style="text-align:center;"> Status
+    <h4> Temperature :
+    <a id="SaT"></a>
+    <h4> Humidity <font color="white">-----</font>:
+    <a id="SaH"></a>
+    <h4> Cooler <font color="white">--------</font>:
+    <a id="cooler"></a>
+    <h4> Pump <font color="white">---------</font>:
+    <a id="Pump"></a>
+    
+    <h3 style="text-align:center;"> Target </h3>
+    <h4> Temperature :
+    <a id="TaT"> </a>
+    <h4> Humidity <font color="white">-----</font>:
+    <a id="TaH"> </a>
+    </div>
+
+    <div class="col-sm-6" id="ShowrealtimeGraph">
+      <p></p>
+      <p></p>
+      <h2 style="text-align:center;"> RealTimeGraph</h2>
+      <div id="real-time-line"  class="epoch" style="height: 400px; position: relative;" data-epoch-container-id="epoch-container-3">
+    </div>
+</div>
+<script type="text/javascript" charset="utf-8">
+  var socket = io();
+  //var showValueT =();
+  //var showValueH = ();
+  var data={"T": 0, "H": 0, "R": 0, "G": 0, "B": 0}
+  var command = 0;
+  function showValueT(newValueT)
+  {
+    document.getElementById("range").innerHTML=newValueT;
+    data["T"]=newValueT;
+    socket.emit('c2s',  JSON.stringify(data));
+  }
+  function showValueH(newValueH)
+  {
+    document.getElementById("range2").innerHTML=newValueH;
+    data["H"]=newValueH;
+    socket.emit('c2s', JSON.stringify(data));
+  }
+  function Red(newValueRed)
+  {
+    document.getElementById("Red").innerHTML=newValueRed;
+    data["R"]=newValueRed;
+    socket.emit('c2s', JSON.stringify(data));
+  }
+  function Green(newValueGreen)
+  {
+    document.getElementById("Green").innerHTML=newValueGreen;
+    data["G"]=newValueGreen;
+    socket.emit('c2s', JSON.stringify(data));
+  }
+  function Blue(newValueBlue)
+  {
+    document.getElementById("Blue").innerHTML=newValueBlue;
+    data["B"]=newValueBlue;
+    socket.emit('c2s', JSON.stringify(data));
+  }
+  function senddata(newValueT,newValueH)
+  {
+    var obj = JSON.stringify(newValueTs,newValueHs);
+    socket.emit('c2s',  obj);
+  }
+  
+  socket.on('s2cC', function(C)
+  {
+    /*if (C==101);
+    {
+      c_data = "ON"
+    }
+    if (C==100);
+    {
+      c_data = "OFF"
+    }
+
+    document.getElementById("cooler").innerHTML=c_data;*/
+    document.getElementById("cooler").innerHTML=C;
+  });
+  socket.on('s2cP', function(P)
+    {
+    document.getElementById("Pump").innerHTML=P;
+    });
+  socket.on('TaT', function(TaT)
+    {
+      document.getElementById("TaT").innerHTML=TaT+'&#8451';
+    });
+  socket.on('TaH', function(TaH)
+    {
+      document.getElementById("TaH").innerHTML=TaH+"%";
+    });
+  socket.on('s2cT', function(SaT)
+    {
+      document.getElementById("SaT").innerHTML=SaT+'&#8451';
+    });
+  socket.on('s2cH', function(SaH)
+    {
+      document.getElementById("SaH").innerHTML=SaH+"%";
+    });
+  function toggle(button)
+{
+  if(document.getElementById("M").value=="OFF")
+  {
+   document.getElementById("M").value="ON";
+   button = 1
+   socket.emit('c2sClick' ,button);
+  }
+
+  else if(document.getElementById("M").value=="ON")
+  {
+   document.getElementById("M").value="OFF";
+   button = 2
+   socket.emit('c2sClick' ,button);
+}
+   console.log(button);
+}
+  var temp=25;
+    var humi=50;
+    $(function() {
+        var data = new RealTimeData(2);
+
+        var chart = $('#real-time-line').epoch({
+            type: 'time.line',
+            data: data.history(),
+            range: {
+          left: [0,100],
+          right: [0,100]
+        },
+            axes: ['left', 'bottom', 'right']
+        });
+
+        setInterval(function() { 
+          unow=moment().unix();
+          d=data.next();
+          
+          d[0].time=unow;
+          d[0].y=temp;
+          d[1].time=unow;
+          d[1].y=humi;
+          chart.push(d);
+        console.log(unow);
+          console.log(JSON.stringify(d));
+        }, 1000);
+        chart.push(data.next());
+    });
+
+    
+    socket.on('s2cT', function(showtemp)
+      {
+        temp=parseFloat(showtemp);
+      });
+      socket.on('s2cH', function(showhumi)
+      {
+        humi=parseFloat(showhumi);
+      });
+    
+</script>
+
+</body>
+</html>
