@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 {% load staticfiles %}
+{% load socketio_tags %}
+{% socketio %}
 <head>
   <title>SmartMushroomBox</title>
   <meta charset="utf-8">
@@ -30,6 +32,8 @@
       <div id="G_temp"></div>
       <script type="text/javascript">
                   var socket = io();
+                  var socket = new io.Socket();
+                  socket.connect();
               socket.on('s2cT', function(temp)
               {
                 console.log(temp);

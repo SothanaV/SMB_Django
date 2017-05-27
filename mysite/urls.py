@@ -22,6 +22,6 @@ urlpatterns = [
     #url(r'', include('myapp.urls')),
     url(r'^control/', views.control, name='control'),
     url(r'^smb/', views.smb, name='smb'),
-
+    url("", include('django_socketio.urls')),
 
 ]
