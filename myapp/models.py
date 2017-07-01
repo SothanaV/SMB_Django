@@ -20,3 +20,12 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
+class box(models.Model):
+    time    = models.DateTimeField(auto_now_add=True)
+    nodeid  = models.CharField(max_length=3, blank=False)
+    temp    = models.FloatField(default=0.0)
+    humi    = models.FloatField(default=0.0)
+    class Meta:
+        ordering = ['nodeid']
+    
+        

@@ -16,12 +16,20 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib import admin
 from myapp import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    url(r'^$',views.home,name='home'),
     #url(r'', include('myapp.urls')),
     url(r'^control/', views.control, name='control'),
     url(r'^smb/', views.smb, name='smb'),
-    url("", include('django_socketio.urls')),
+    #url(r'^$', views.post_list, name='post_list'),
+    #url(r'^$', views.control, name='control'),
+    #url(r'^$', views.smb, name='smb'),
+    url(r'^signin/', views.signin, name='signin'),
+    url(r'^signout/', views.signout, name='signout'),
+    url(r'^change_password/', views.change_password, name='change_password'),
 
 ]
