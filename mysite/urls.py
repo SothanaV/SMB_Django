@@ -22,14 +22,18 @@ from django.conf.urls.static import static
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^$',views.home,name='home'),
-    #url(r'', include('myapp.urls')),
     url(r'^control/', views.control, name='control'),
     url(r'^smb/', views.smb, name='smb'),
-    #url(r'^$', views.post_list, name='post_list'),
-    #url(r'^$', views.control, name='control'),
-    #url(r'^$', views.smb, name='smb'),
     url(r'^signin/', views.signin, name='signin'),
     url(r'^signout/', views.signout, name='signout'),
     url(r'^change_password/', views.change_password, name='change_password'),
+    #url(r'^data/(?P<nodeid>\d+)/(?P<temp>\d+\.\d+)/(?P<humi>\d+\.\d+)/(?P<key>\d+)/$', views.getdata, name='getdata'),
+    #url(r'^addprogram/', views.addprofile, name='addprogram'),
+    #url(r'data/', include('getdata.urls')),
+    url(r'^data/', include('AppControl.urls')),
+    #url(r'^getprogram/', views.getprogram, name='getprogram'),
+
+
+
 
 ]

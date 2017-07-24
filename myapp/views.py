@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.utils import timezone
-from .models import Post ,box
-
+from .models import Post, Box,Profile
+from .forms import ProfileForm
 from django.shortcuts import render
 
 from django.http import HttpResponse
@@ -9,7 +9,7 @@ from django.http import HttpResponse
 
 from django.http import JsonResponse
 import json
-
+from django.core import serializers
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
@@ -17,9 +17,7 @@ from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 import sys
-from django.contrib.auth.forms import PasswordChangeForm
-
-from flask_socketio import SocketIO, send, emit 
+from django.contrib.auth.forms import PasswordChangeForm 
 def post_list(request):
     posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
     return render(request, 'myapp/post_list.html', {'posts': posts})
@@ -52,7 +50,7 @@ def signin(request):
 				request.session['username'] = user.username
 				print >>sys.stderr, "username_f: %s"%request.session['username']
 				
-				return redirect('home')
+				return redirect('smb')
 			else:
 				msg="Disabled account"
 		else:
@@ -61,10 +59,10 @@ def signin(request):
 	return render(request,'login.html',{'msg': ""})
 
 def signout(request):
-	print "signout"
+	print ("signout")
 	if 'username' in request.session:
 		del request.session['username']
-		print "del uname"
+		print ("del uname")
 	logout(request)
 	return redirect('smb')
 
@@ -80,15 +78,62 @@ def change_password(request):
             update_session_auth_hash(request, form.user)
             return redirect('class_page')
 
-    return render(request, 'change_password.html', {
-        'form': form,
-    })
+    return render(request, 'change_password.html', {'form': form})
 
-def getdata(request):
-	data_box = box(
-	nodeid = request.GET['nodeid'],
-	temp 	= float(request.GET['temp']), 
-	humi 	= float(request.GET['humi']),
+def getdata(request,nodeid,temp,humi,key):
+	#node = request.POST['nodeid']
+	c_temp = "100"
+	c_humi = "200"
+	if float(temp) >= 20:
+		c_temp = "101"
+	if float(temp) <= 16:
+		c_temp = "100"
+	if float(humi) <= 40:
+		c_humi = "201"
+	if float(humi) >= 80:
+		c_humi = "200"
+	command = "%s,%s"%(c_temp,c_humi)
+	if key=="2345678909876543234567898765":
+		data_box = Box(
+			nodeid = nodeid ,
+			temp 	= float(temp), 
+			humi 	= float(humi),
+			)
+		data_box.save()
+		print ("Save")
+	else:
+		print ("UnSave")
+	return HttpResponse(command,content_type='text/plain')
+
+def addprofile(request):
+	#form = None
+	#if request.method == 'POST':
+	form = ProfileForm(request.POST or None)
+	if form.is_valid():
+		day = request.POST['day']
+		temp = request.POST['temp']
+		humi = request.POST['humi']
+		ontime = request.POST['ontime']
+		lred = request.POST['lred']
+		lgreen = request.POST['lgreen']
+		lblue = request.POST['lblue']
+		post = Profile.objects.create(
+			day=day,
+			temp=temp,
+			humi=humi,
+			ontime=ontime,
+			lred=lred,
+			lgreen=lgreen,
+			lblue=lblue,
 		)
-	data_box.save()
-	return HttpResponse("Command",content_type='text/plain')
+		post.save()
+		return redirect('home')  
+	else:
+		form = ProfileForm()
+	return render(request, 'addprofile.html', {'form': form})
+	#return render(request, 'addprofile.html')
+
+def getprogram(request):
+	data = Profile.objects.all().values('day','temp','humi','ontime','lred','lgreen','lblue')
+	print(data)
+	return JsonResponse( list(data) , safe= False)

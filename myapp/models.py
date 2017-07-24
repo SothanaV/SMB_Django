@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 from django.db import models
 from django.utils import timezone
 
@@ -20,12 +19,21 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
-class box(models.Model):
+class Box(models.Model):
     time    = models.DateTimeField(auto_now_add=True)
     nodeid  = models.CharField(max_length=3, blank=False)
     temp    = models.FloatField(default=0.0)
     humi    = models.FloatField(default=0.0)
     class Meta:
         ordering = ['nodeid']
+    
+class Profile(models.Model):
+    day     = models.CharField(max_length=3,blank=False,default=0.0)
+    temp    = models.IntegerField(default=0.0)
+    humi    = models.IntegerField(default=0.0)
+    ontime  = models.IntegerField(default=0)
+    lred    = models.IntegerField(default=0)
+    lgreen  = models.IntegerField(default=0)
+    lblue   = models.IntegerField(default=0)
     
         
